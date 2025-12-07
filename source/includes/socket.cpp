@@ -31,11 +31,11 @@ std::string Socket::read(Socket s){
     while(read_len < 2048){
         int n = recv(s.socket_fd,&c,1,0);
         if(n == 1){
-            buff[i++] = c;
-            read_len++;
             if(c == '\0'){
                 break;
             }
+            buff[i++] = c;
+            read_len++;
         }
         if((n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || n == 0){
             break;
@@ -139,6 +139,10 @@ void ServerSocket::up(){
     }
 }
 
+void ServerSocket::stop(){
+    this->active = false;
+}
+
 void ServerSocket::removeConnection(int fd){
     for(auto it = this->conn_pool.begin(); it!=this->conn_pool.end(); it++){
         if((*it).getid() == fd){
@@ -162,8 +166,6 @@ void ServerSocket::setOperation(void (*f)(ServerSocket *)){
     this->f = f;
 }
 
-
 void ServerSocket::addConnection(ClientSocket s){
-   
     this->conn_pool.push_back(s);
 }

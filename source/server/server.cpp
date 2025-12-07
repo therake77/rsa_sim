@@ -1,11 +1,16 @@
 #include <socket.hpp>
+#include <rsa.hpp>
 #include <iostream>
 void f(ServerSocket* s){
     std::vector<ClientSocket> clients = s->getCurrentClients();
     for(auto c: clients){
-        std::string s = Socket::read(c);
-        if(s != ""){
-            std::cout<<s<<std::endl;
+        std::string msg = Socket::read(c);
+        if(msg != ""){
+            std::cout<<msg<<std::endl;
+        }
+        if(msg == std::string("stop")){
+            std::cout<<"stopping..."<<std::endl;
+            s->stop();
         }
     }
 }

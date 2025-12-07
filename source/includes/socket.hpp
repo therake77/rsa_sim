@@ -3,6 +3,8 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <vector>
+#include <unordered_map>
+#include <any>
 
 class Socket{
 protected:
@@ -33,11 +35,15 @@ public:
     bool waitForConnections(int);
     void setOperation(void (*)(ServerSocket *));
     void up();
+    void stop();
     int getid();
     std::vector<ClientSocket> getCurrentClients();
+    std::any getSavedObject(std::string);
+    void saveObject(std::string, std::any obj);
 private:
     void (*f)(ServerSocket *);
     std::vector<ClientSocket> conn_pool;
+    std::unordered_map<std::string,std::any> customObjects;
     bool active = false;
     void addConnection(ClientSocket);
     void removeConnection(int);
