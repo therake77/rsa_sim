@@ -14,7 +14,7 @@ bool isPrime(uint64_t n);
 uint64_t gcd(uint64_t a, uint64_t b);
 gcdinfo extended_euclidean_algorithm(uint64_t a, uint64_t b);
 
-class RSA_Factory{
+class RSA_Container{
 private:
     std::random_device rd;
     std::mt19937_64 gen;
@@ -27,8 +27,10 @@ public:
     uint64_t d;
     uint64_t e;
     bool hasValidKeys = false;
-    RSA_Factory();
-    static std::string encript(u_int64_t public_key, std::string msg);
-    std::string decrypt(std::string encrypted_msg);
+    RSA_Container();
+    RSA_Container(const RSA_Container &r);
+    static std::string encript(u_int64_t , std::string );
+    static std::string decrypt(u_int64_t , std::string );
     void generateKeys();
+    void invalidateKeys();
 };

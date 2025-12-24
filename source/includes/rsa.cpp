@@ -2,7 +2,7 @@
 #include <iostream>
 #include <exception>
 
-//note: it will be removed in future
+//note: it will be removed in future (uint128 is only used as intermediate objects in arithmetic operations)
 std::ostream& operator<<(std::ostream& os, __int128 value) {
     if (value == 0) {
         os << "0";
@@ -30,6 +30,17 @@ std::ostream& operator<<(std::ostream& os, __int128 value) {
         os << buffer[i];
 
     return os;
+}
+
+RSA_Container::RSA_Container(const RSA_Container &r){
+    this->gen = r.gen;
+    this->keyspace = r.keyspace;
+    this->n = r.n;
+    this->p = r.p;
+    this->q = r.q;
+    this->d = r.d;
+    this->e = r.e;
+    this->hasValidKeys = r.hasValidKeys;
 }
 
 uint64_t fast_mod_exp(uint64_t base, uint64_t exp, uint64_t n){
@@ -128,12 +139,12 @@ uint64_t inverse_mod(uint64_t a, uint64_t n){
     return 0ULL;
 }
 
-RSA_Factory::RSA_Factory(){
+RSA_Container::RSA_Container(){
     gen = std::mt19937_64(rd());
     keyspace = std::uniform_int_distribution<uint32_t>(0x80000000u,0xFFFFFFFFu);
 }
 
-uint32_t RSA_Factory::generatePrime(){
+uint32_t RSA_Container::generatePrime(){
     while (true)
     {
         uint32_t prime = keyspace(gen);
@@ -143,12 +154,12 @@ uint32_t RSA_Factory::generatePrime(){
     }
 }
 
-void RSA_Factory::generateKeys(){
+void RSA_Container::generateKeys(){
     //first, generate the 
     this->p = generatePrime();
     this->q = generatePrime();
-    this-> n = p*q;
-    uint64_t totient = (p-1) * (q-1);
+    this-> n = ((uint64_t)p*(uint64_t)q);
+    uint64_t totient = (uint64_t)(p-1) * (uint64_t)(q-1);
 
     //generate e
     uint64_t temp;
@@ -165,7 +176,18 @@ void RSA_Factory::generateKeys(){
     this->d = inverse_mod(e,totient);
     std::cout<<"generated d: "<<this->d<<std::endl;
 
-    if((uint64_t)((__uint128_t)(e*d)%totient)!=1ULL){
+    if((uint64_t)(((__uint128_t)e*(__uint128_t)d)%(__uint128_t)totient)!=1ULL){
         throw std::exception();
     }
+
+    this->hasValidKeys = true;
+    return;
+}
+
+void RSA_Container::invalidateKeys(){
+    this->hasValidKeys = false;
+}
+
+std::string RSA_Container::encript(uint64_t public_key,std::string msg){
+    return std::string("");
 }

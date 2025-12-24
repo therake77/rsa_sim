@@ -9,6 +9,9 @@ Socket::Socket(const std::string addr): addr(addr){
         throw std::exception();
     }
 }
+Socket::~Socket(){
+    close(this->socket_fd);
+}
 
 bool Socket::start(){
     unlink(addr.c_str());
@@ -48,7 +51,6 @@ std::string Socket::read(Socket s){
 void Socket::write(Socket s, std::string msg){
     const char* buff = msg.c_str();
     size_t len = msg.size()+1;
-    std::cout<<len<<std::endl;
     size_t written = 0;
     while(written < len){
         int n = send(s.socket_fd,buff + written,len-written,0);
@@ -141,6 +143,7 @@ void ServerSocket::up(){
 
 void ServerSocket::stop(){
     this->active = false;
+    close(this->socket_fd);
 }
 
 void ServerSocket::removeConnection(int fd){
