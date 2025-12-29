@@ -15,8 +15,8 @@ client: socket.o client.o rsa.o cmd.o
 server: socket.o server.o rsa.o cmd.o
 	$(CC) $(OBJECT)/socket.o $(OBJECT)/server.o $(OBJECT)/rsa.o $(OBJECT)/cmd.o -o $(BIN)/server
 
-tests: socket.o rsa.o test.o
-	$(CC) $(OBJECT)/socket.o $(OBJECT)/rsa.o $(OBJECT)/test.o -o $(BIN)/test
+tests: socket.o rsa.o test.o cmd.o
+	$(CC) $(OBJECT)/socket.o $(OBJECT)/rsa.o $(OBJECT)/test.o $(OBJECT)/cmd.o -o $(BIN)/test
 
 socket.o: $(INCLUDES)/socket.cpp $(INCLUDES)/socket.hpp 
 	$(CC) $(CFLAGS) -c $(INCLUDES)/socket.cpp -o $(OBJECT)/socket.o

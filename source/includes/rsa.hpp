@@ -27,10 +27,10 @@ public:
     uint64_t d;
     uint64_t e;
     bool hasValidKeys = false;
+    static std::string encrypt(uint64_t, u_int64_t , std::string );
+    static std::string decrypt(uint64_t, u_int64_t , std::string );
     RSA_Container();
     RSA_Container(const RSA_Container &r);
-    static std::string encript(u_int64_t , std::string );
-    static std::string decrypt(u_int64_t , std::string );
     void generateKeys();
     void invalidateKeys();
 };

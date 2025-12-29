@@ -1,6 +1,7 @@
 #include <rsa.hpp>
 #include <iostream>
 #include <exception>
+#include <cmd.hpp>
 
 //note: it will be removed in future (uint128 is only used as intermediate objects in arithmetic operations)
 std::ostream& operator<<(std::ostream& os, __int128 value) {
@@ -47,16 +48,16 @@ uint64_t fast_mod_exp(uint64_t base, uint64_t exp, uint64_t n){
     if(exp == 0){
         return 1;
     }
-    uint64_t result = 1;
+    uint64_t result = 1ULL;
     while(exp > 1){
         if (exp & 1){
-            result = ((__uint128_t)(result * base) % n);
+            result = (uint64_t)((__uint128_t)((__uint128_t)result * (__uint128_t)base) % (__uint128_t)n);
             exp -= 1;
         }
-        base = (__uint128_t)(base * base) % n;
+        base = (uint64_t)(((__uint128_t)base * (__uint128_t)base) % (__uint128_t)n);
         exp >>= 1;
     }
-    return ((__uint128_t) base * result) % n;
+    return (uint64_t)(((__uint128_t) base * (__uint128_t)result) % (__uint128_t)n);
 }
 
 uint64_t* remove_two_powers(uint64_t n){
@@ -73,7 +74,7 @@ uint64_t* remove_two_powers(uint64_t n){
 
 bool millerTest(uint64_t a,uint64_t n, uint64_t d, uint64_t s){
     uint64_t x = fast_mod_exp(a,d,n);
-    if(x == 1 || x == n-1){
+    if(x == 1ULL || x == n-1){
         return true;
     }
     for(uint64_t i = 0 ; i < s; i++){
@@ -125,7 +126,7 @@ gcdinfo extended_euclidean_algorithm(uint64_t a, uint64_t b){
     }else{
         gcdinfo temp = extended_euclidean_algorithm(b,a%b);
         i.x = temp.y;
-        i.y = temp.x - (__int128_t)(a / b)*temp.y;
+        i.y = temp.x - ((__int128_t)(a / b)*(__int128_t)temp.y);
         i.gcd = temp.gcd;
         return i;
     }
@@ -134,12 +135,62 @@ gcdinfo extended_euclidean_algorithm(uint64_t a, uint64_t b){
 uint64_t inverse_mod(uint64_t a, uint64_t n){
     gcdinfo g = extended_euclidean_algorithm(a,n);
     if(g.gcd == 1){
-        return g.x % n;
+        int64_t x = (int64_t)((__int128_t)g.x % (__int128_t)n);
+        if(x < 0){
+            x+=n;
+        }
+        return (uint64_t) x;
     }
     return 0ULL;
 }
 
-RSA_Container::RSA_Container(){
+std::string RSA_Container::encrypt(uint64_t mod,uint64_t public_exp,std::string msg){
+    std::vector<std::string> blocks = toblocks(msg,7);
+
+    for(int i = 0; i < blocks.size(); i++){
+        std::cout<<"Block: "<<blocks[i]<<std::endl;
+        uint64_t umsg = stouint64(blocks[i]);
+        std::cout<<"Block number: "<<umsg<<std::endl;
+        uint64_t umsge = fast_mod_exp(umsg,public_exp,mod);
+        std::cout<<"Encrypted block number: "<<umsge<<std::endl;
+        blocks[i] = uint64tos(umsge);
+        std::cout<<"Encrypted block before padding: ";
+        c_print(blocks[i]);
+        blocks[i].resize(8,'/0');
+        std::cout<<"Encrypted block after padding: ";
+        c_print(blocks[i]);
+    }
+
+    std::string encrypted_msg;
+    encrypted_msg.reserve(blocks.size()*7);
+    for(int i = 0 ; i < blocks.size(); i++){
+        encrypted_msg.append(blocks[i]);
+    }
+    return encrypted_msg;
+}
+
+std::string RSA_Container::decrypt(uint64_t mod,uint64_t private_exp,std::string msg){
+    //first, transform the messagess to blocks
+    std::vector<std::string> blocks = toblocks(msg,8);
+    for(int i = 0; i < blocks.size(); i++){
+        c_print(blocks[i]);
+        uint64_t umsg = stouint64(blocks[i]);
+        std::cout<<"Block number: "<<umsg<<std::endl;
+        uint64_t umsg_d = fast_mod_exp(umsg,private_exp,mod);
+        std::cout<<"Decrypted block number: "<<umsg_d<<std::endl;
+        blocks[i] = uint64tos(umsg_d);
+
+    }
+    std::string decrypted_msg;
+    decrypted_msg.reserve(blocks.size()*7);
+    for(int i = 0 ; i < blocks.size(); i++){
+        decrypted_msg.append(blocks[i]);
+    }
+    return decrypted_msg;
+}
+
+RSA_Container::RSA_Container()
+{
     gen = std::mt19937_64(rd());
     keyspace = std::uniform_int_distribution<uint32_t>(0x80000000u,0xFFFFFFFFu);
 }
@@ -159,13 +210,13 @@ void RSA_Container::generateKeys(){
     this->p = generatePrime();
     this->q = generatePrime();
     this-> n = ((uint64_t)p*(uint64_t)q);
-    uint64_t totient = (uint64_t)(p-1) * (uint64_t)(q-1);
-
+    std::cout<<"p : "<<p<<" q: "<<q<<" n: "<<n<<std::endl;
+    uint64_t totient = (uint64_t)(((uint64_t)p-1ULL) *((uint64_t)q-1ULL));
+    std::cout<<"generated totient: "<<totient<<std::endl;
     //generate e
     uint64_t temp;
     std::uniform_int_distribution<uint64_t> e_space(2,totient-1);
-    std::cout<<"generated totient: "<<totient<<std::endl;
-
+    
     do{
         temp = e_space(gen);
     }while(gcd(totient,temp) != 1ULL);
@@ -188,6 +239,4 @@ void RSA_Container::invalidateKeys(){
     this->hasValidKeys = false;
 }
 
-std::string RSA_Container::encript(uint64_t public_key,std::string msg){
-    return std::string("");
-}
+
