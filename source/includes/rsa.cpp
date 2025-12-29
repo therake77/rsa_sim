@@ -77,10 +77,13 @@ bool millerTest(uint64_t a,uint64_t n, uint64_t d, uint64_t s){
     if(x == 1ULL || x == n-1){
         return true;
     }
-    for(uint64_t i = 0 ; i < s; i++){
+    for(uint64_t i = 0 ; i < s-1; i++){
         x = fast_mod_exp(x,2,n);
         if(x == n-1){
             return true;
+        }
+        if(x == 1ULL){
+            return false;
         }
     }
     return false;
