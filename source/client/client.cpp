@@ -71,8 +71,6 @@ int main(){
             }
             std::string encrypted_msg = RSA_Container::encrypt(*public_mod_p,*public_exp_p,msg);
             std::cout<<encrypted_msg<<std::endl;
-            c_print(encrypted_msg);
-            std::cout<<encrypted_msg.size()<<std::endl;  
             Socket::write(client.get_sock(),cmd);
             Socket::write(client.get_sock(),encrypted_msg);
             poll(&p,1,-1);

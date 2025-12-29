@@ -77,9 +77,9 @@ bool millerTest(uint64_t a,uint64_t n, uint64_t d, uint64_t s){
     if(x == 1ULL || x == n-1){
         return true;
     }
-    for(uint64_t i = 0 ; i < s-1; i++){
+    for(uint64_t i = 0 ; i < s; i++){
         x = fast_mod_exp(x,2,n);
-        if(x == n-1){
+        if(x == n-1ULL){
             return true;
         }
         if(x == 1ULL){
@@ -151,17 +151,8 @@ std::string RSA_Container::encrypt(uint64_t mod,uint64_t public_exp,std::string 
     std::vector<std::string> blocks = toblocks(msg,7);
 
     for(int i = 0; i < blocks.size(); i++){
-        std::cout<<"Block: "<<blocks[i]<<std::endl;
-        uint64_t umsg = stouint64(blocks[i]);
-        std::cout<<"Block number: "<<umsg<<std::endl;
-        uint64_t umsge = fast_mod_exp(umsg,public_exp,mod);
-        std::cout<<"Encrypted block number: "<<umsge<<std::endl;
-        blocks[i] = uint64tos(umsge);
-        std::cout<<"Encrypted block before padding: ";
-        c_print(blocks[i]);
+        blocks[i] = uint64tos(fast_mod_exp(stouint64(blocks[i]),public_exp,mod));
         blocks[i].resize(8,'/0');
-        std::cout<<"Encrypted block after padding: ";
-        c_print(blocks[i]);
     }
 
     std::string encrypted_msg;
@@ -176,12 +167,7 @@ std::string RSA_Container::decrypt(uint64_t mod,uint64_t private_exp,std::string
     //first, transform the messagess to blocks
     std::vector<std::string> blocks = toblocks(msg,8);
     for(int i = 0; i < blocks.size(); i++){
-        c_print(blocks[i]);
-        uint64_t umsg = stouint64(blocks[i]);
-        std::cout<<"Block number: "<<umsg<<std::endl;
-        uint64_t umsg_d = fast_mod_exp(umsg,private_exp,mod);
-        std::cout<<"Decrypted block number: "<<umsg_d<<std::endl;
-        blocks[i] = uint64tos(umsg_d);
+        blocks[i] = uint64tos(fast_mod_exp(stouint64(blocks[i]),private_exp,mod));
 
     }
     std::string decrypted_msg;

@@ -37,12 +37,8 @@ void f(Server* s, const Socket& peer){
             }
             std::string encrypted_msg = Socket::read(peer);
             std::cout<<encrypted_msg<<std::endl;
-            c_print(encrypted_msg);
-            std::cout<<encrypted_msg.size()<<std::endl;
             std::string decrypted = RSA_Container::decrypt(r.n,r.d,encrypted_msg);
             std::cout<<decrypted<<std::endl;
-            c_print(decrypted);
-            std::cout<<decrypted.size()<<std::endl;
             Socket::write(peer,OK_STR);
             break;
         }
