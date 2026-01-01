@@ -33,64 +33,42 @@ int main(){
     if(!client.connect_to(server_addr)){
         throw std::exception();
     }
+    
     pollfd p = {client.get_fd(),POLLIN,0};
-
+    
+    //first: we should read the keys our server send to communicate
+    poll(&p,1,-1);
+    std::string keystring = Socket::read(client.get_sock());
+    
+    uint64_t n;
+    uint64_t e;
+    bool key_st = parse_keystring(keystring,n,e); 
+    if(!key_st){
+        std::cout<<"Bad keystring\n";
+        throw std::exception();
+    }
+    //By now we should have the keys
+    //Every command is going to be encrypted from this point
     while(true){
-        std::string line;
-        std::getline(std::cin,line);
-        std::string cmd,msg;
-        getcmd(line,cmd,msg);
-
-        if(cmd == REQUEST_KEYS_STR){
-            Socket::write(client.get_sock(),cmd);
-            poll(&p,1,-1);
-            uint64_t mod = std::stoull(Socket::read(client.get_sock()));
-            poll(&p,1,-1);
-            uint64_t exp = std::stoull(Socket::read(client.get_sock()));
-            std::cout<<"Received: "<<mod<<" "<<exp<<std::endl;
-            client.attach_object<uint64_t>("public_mod",std::make_shared<uint64_t>(mod));
-            client.attach_object<uint64_t>("public_exp",std::make_shared<uint64_t>(exp));
-        }else if(cmd == STOP_SERVER_MSG_STR){
-            Socket::write(client.get_sock(),cmd);
-            poll(&p,1,-1);
-            std::string response = Socket::read(client.get_sock());
-            std::cout << response << std::endl;
-            if(response == SHUTDOWN_STR){
-                std::cout<<"Exiting..."<<std::endl;
-                break;
-            }else{
-                std::cout<<"Exiting failed..."<<std::endl;
-                continue;
-            }
-        }else if(cmd == SEND_ENCRYPTED_MSG_STR && !msg.empty()){
-            std::shared_ptr<uint64_t> public_mod_p = client.get_object<uint64_t>("public_mod"); 
-            std::shared_ptr<uint64_t> public_exp_p = client.get_object<uint64_t>("public_exp");
-            if(public_mod_p == nullptr || public_exp_p == nullptr){
-                std::cout<<"No key saved was found. Request keys using REQK"<<std::endl;
-                continue;
-            }
-            std::string encrypted_msg = RSA_Container::encrypt(*public_mod_p,*public_exp_p,msg);
-            std::cout<<encrypted_msg<<std::endl;
-            Socket::write(client.get_sock(),cmd);
-            Socket::write(client.get_sock(),encrypted_msg);
-            poll(&p,1,-1);
-            std::string response = Socket::read(client.get_sock());
-            std::cout << response << std::endl;
-
-        }else if(cmd == SEND_NONENCRYPTED_MSG_STR && !msg.empty()){
-            Socket::write(client.get_sock(),cmd);
-            Socket::write(client.get_sock(),msg);
-            poll(&p,1,-1);
-            std::string response = Socket::read(client.get_sock());
-            std::cout << response << std::endl;
-
-        }else if(cmd == INVALIDATE_KEYS_STR){
-            Socket::write(client.get_sock(),cmd);
-            poll(&p,1,-1);
-            std::string response = Socket::read(client.get_sock());
-            std::cout << response << std::endl;
-        }else{
-            std::cout << "Command ignored..."<< std::endl;
+        //First: get the command from stdin
+        std::string cmd;
+        std::transform(cmd.begin(),cmd.end(),cmd.begin(),[](const char c){return std::toupper(c);});
+        std::getline(std::cin,cmd);
+        if(cmd.size() == 0){
+            continue;
         }
+        std::string encrypted_msg = RSA_Container::encrypt(n,e,cmd);
+        std::cout<<"Encrypted msg: "<<encrypted_msg<<std::endl;
+        c_print(encrypted_msg);
+        Socket::write(client.get_sock(),encrypted_msg);
+        //The server will return a response
+        poll(&p,1,-1);
+        std::string response = Socket::read(client.get_sock());
+        //Parse the response (response codes defined in cmd.hpp)
+        std::cout<<response<<std::endl;
+        /*
+        int response_code;
+        std::vector<std::string> parsresponse = parse_response(response,response_code);
+        */
     }   
 }    

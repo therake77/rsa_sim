@@ -63,15 +63,17 @@ public:
 class Server : public Agent{
 private:
     void (*op)(Server *,const Socket&);
+    void (*welcome_op)(Server *,const Socket&);
     std::unordered_map<int,std::unique_ptr<Socket>> conn_pool;
     bool running = false;
-    bool add_conn(int,sockaddr_un);
+    auto add_conn(int,sockaddr_un);
     bool remove_conn(int);
 
 public:
     Server(std::string);
     bool wait_for_comms(int);
     void set_operation(void (*)(Server*,const Socket&));
+    void set_welcome_op(void(*)(Server*,const Socket&));
     void up();
     void stop();
 };

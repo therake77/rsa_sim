@@ -3,36 +3,6 @@
 #include <exception>
 #include <cmd.hpp>
 
-//note: it will be removed in future (uint128 is only used as intermediate objects in arithmetic operations)
-std::ostream& operator<<(std::ostream& os, __int128 value) {
-    if (value == 0) {
-        os << "0";
-        return os;
-    }
-
-    bool neg = false;
-    if (value < 0) {
-        neg = true;
-        value = -value;
-    }
-
-    char buffer[50];
-    int i = 0;
-
-    while (value > 0) {
-        buffer[i++] = '0' + (value % 10);
-        value /= 10;
-    }
-
-    if (neg)
-        os << '-';
-
-    while (i--)
-        os << buffer[i];
-
-    return os;
-}
-
 RSA_Container::RSA_Container(const RSA_Container &r){
     this->gen = r.gen;
     this->keyspace = r.keyspace;
@@ -168,7 +138,6 @@ std::string RSA_Container::decrypt(uint64_t mod,uint64_t private_exp,std::string
     std::vector<std::string> blocks = toblocks(msg,8);
     for(int i = 0; i < blocks.size(); i++){
         blocks[i] = uint64tos(fast_mod_exp(stouint64(blocks[i]),private_exp,mod));
-
     }
     std::string decrypted_msg;
     decrypted_msg.reserve(blocks.size()*7);
@@ -182,6 +151,15 @@ RSA_Container::RSA_Container()
 {
     gen = std::mt19937_64(rd());
     keyspace = std::uniform_int_distribution<uint32_t>(0x80000000u,0xFFFFFFFFu);
+    try{
+        this->generateKeys();
+        std::cout<<"p: "<<this->p<<"q: "<<this->q<<"n: "<<this->n<<std::endl;
+        std::cout<<"e: "<<this->e<<std::endl;
+        std::cout<<"d: "<<this->d<<std::endl;
+    }catch(std::exception e){
+        std::cout<<"Error generating keys\n";
+        throw e;
+    }
 }
 
 uint32_t RSA_Container::generatePrime(){

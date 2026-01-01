@@ -5,50 +5,102 @@
 #include <string.h>
 #include <list>
 
-int parsecmd(std::string cmd){
-    if(cmd.size() > 4){
-        return BAD;
+std::string trim(std::string s){
+    bool flag = true;
+    int k = 0;
+    while(flag){
+        if(s.at(k) != ' '){
+            flag = false;
+            continue;
+        }
+        k++;
     }
-    if(cmd == REQUEST_KEYS_STR){
-        return REQUEST_KEYS;
+    s = s.substr(k,s.size()-k);
+    flag = true;
+    k = s.size()-1;
+    while(flag){
+        if(s.at(k) != ' '){
+            flag = false;
+            continue;
+        }
+        k--;
     }
-    if(cmd == SEND_NONENCRYPTED_MSG_STR){
-        return SEND_NONENCRYPTED_MSG;
+    s = s.substr(0,k+1);
+    return s;
+}
+
+
+bool parse_cmd(std::string cmd,int& __cmd,std::string& payload){
+    cmd = trim(cmd);
+    std::cout<<"command trimmed: "<<cmd<<std::endl;
+    int i = cmd.find(' ');
+    std::string _cmd = "";
+    std::string _msg = "";
+    if(i != std::string::npos){
+        _cmd = cmd.substr(0,i);
+        _msg = cmd.substr(i+1,cmd.size()-i-1);
+    }else{
+        _cmd = cmd;
     }
-    if(cmd == SEND_ENCRYPTED_MSG_STR){
-        return SEND_ENCRYPTED_MSG;
+    std::transform(_cmd.begin(),_cmd.end(),_cmd.begin(),[](const char c){return std::toupper(c);});
+    //now starts the comparisons
+    std::cout<<"command: "<<_cmd<<std::endl;
+    if(_cmd == REQUEST_KEYS_STR){
+        __cmd = REQUEST_KEYS;
+        return true;
+    }else if( _cmd == SEND_MSG_STR){
+        __cmd = SEND_MSG;
+        if(_msg.size() != 0){
+            payload = _msg;
+            return true;
+        }
+        return false;
+    }else if( _cmd == STOP_SERVER_STR){
+        __cmd = STOP;
+        return true;
+    }else if( _cmd == SEND_PROOF_OF_ID_STR){
+        __cmd = SEND_PROOF_OF_ID;
+        return true;
+    }else{
+        __cmd = BAD;
+        return false;
     }
-    if(cmd == STOP_SERVER_MSG_STR){
-        return STOP;
+}
+
+bool parse_keystring(std::string keystring,uint64_t& mod, uint64_t& exp){
+    int i = keystring.find(" ");
+    if(i == std::string::npos){
+        return false;
     }
-    if(cmd == INVALIDATE_KEYS_STR){
-        return INVALIDATE_KEYS;
+    try{
+        mod = std::stoull(keystring.substr(0,i));
+        exp = std::stoull(keystring.substr(i+1,keystring.size()-i+1));
+    }catch(std::exception e){
+        return false;
     }
-    return BAD;
+    return true;
 }
 
 std::vector<std::string> toblocks(std::string msg,int blocksize){
     std::vector<std::string> result;
-    int rsize = msg.size()%blocksize;
-    if(rsize != 0){
-        msg.append(std::string(blocksize-rsize,' '));
-    }
     for(int i = 0 ; i < msg.size(); i+=blocksize){
+        if(i+blocksize>msg.size()){
+            result.push_back(msg.substr(i,msg.size()-i+1));
+            continue;
+        }
         result.push_back(msg.substr(i,blocksize));
     }
+    result[result.size()-1] = std::string(blocksize-result[result.size()-1].length(),'\0') + result[result.size()-1];
     return result;
 }
 
 uint64_t stouint64(std::string s){
-    //considering our padding scheme, this is necessary
-    size_t size = strlen(s.data());
-
-    if(size > 8){
+    if(s.size() > 8){
         return -1;
     }
     uint64_t result = 0;
-    for(size_t j = 0; j < size; j++){
-        uint64_t n_c = ((unsigned char) s[j])*pow(256,size-1-j);
+    for(size_t j = 0; j < s.size(); j++){
+        uint64_t n_c = ((unsigned char) s[j])*pow(256,s.size()-1-j);
         result+= n_c;
     }
     return result;

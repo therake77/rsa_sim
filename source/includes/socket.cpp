@@ -223,9 +223,9 @@ bool Client::connect_to(std::string addr){
 /*-------------------------------------End of Client definitions-------------------------------------*/
 /*-------------------------------------Start of Server definitions-------------------------------------*/
 
-bool Server::add_conn(int _fd, sockaddr_un sock_addr){
+auto Server::add_conn(int _fd, sockaddr_un sock_addr){
     auto r = this->conn_pool.insert_or_assign(_fd,std::make_unique<Socket>(_fd,sock_addr));
-    return r.second;
+    return r;
 }
 
 bool Server::remove_conn(int _fd){
@@ -248,6 +248,10 @@ bool Server::wait_for_comms(int n_conns){
 
 void Server::set_operation(void (*f)(Server*,const Socket&)){
     this->op = f;
+}
+
+void Server::set_welcome_op(void (*f)(Server*,const Socket&)){
+    this->welcome_op = f;
 }
 
 void Server::up(){
@@ -280,8 +284,16 @@ void Server::up(){
             socklen_t len = sizeof(client_addr);
             memset(&client_addr,0,sizeof(client_addr));
             int client_fd = accept(this->sock.get_fd(),(struct sockaddr *)&client_addr,&len);
+            
+            //wait for the socket to be ready to write
+            pollfd temp = {client_fd,POLLOUT,0};
+            poll(&temp,1,-1);
+            if(temp.revents & (POLLERR | POLLHUP | POLLRDHUP)){
+                continue;    
+            }
+            auto t = this->add_conn(client_fd,client_addr);
             to_watch.push_back({client_fd,POLLIN,0});
-            this->add_conn(client_fd,client_addr);
+            this->welcome_op(this,*(t.first->second));
         }
         
         //Now, check for event in peers sockets
@@ -295,7 +307,7 @@ void Server::up(){
                 //identify the client that is ready to perform operation
                 try{
                     Socket& s = *(this->conn_pool.at(p->fd));
-                    op(this,s);
+                    this->op(this,s);
                 }catch(std::exception e){
                     std::cout<<e.what()<<std::endl;
                     return;
