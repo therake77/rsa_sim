@@ -14,6 +14,11 @@
 #define BAD_CMD_STR "BAD"
 #define SHUTDOWN_STR "SHDW"
 
+//RSPONSES
+
+#define MSG_STR "MSG"
+#define KEY_STR "KEY"
+#define ID_STR "ID"
 
 //COMMANDS CODES
 #define STOP 4
@@ -23,10 +28,16 @@
 #define OK 2
 #define BAD -1
 
+//RESPONSE CODES
+#define MSG 10
+#define KEY 11
+#define ID 12
+
 
 bool parse_cmd(std::string,int&,std::string&);
 bool parse_keystring(std::string,uint64_t&,uint64_t&);
-std::vector<std::string> parse_response(std::string,int& code);
+std::string build_response(int,std::string);
+std::pair<int,std::string> parse_response(std::string);
 std::vector<std::string> toblocks(std::string,int);
 uint64_t stouint64(std::string);
 std::string uint64tos(uint64_t);

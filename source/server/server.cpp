@@ -26,26 +26,30 @@ void f(Server* s, const Socket& peer){
     switch(cmd_code){
         case REQUEST_KEYS: {
             r.generateKeys();
-            Socket::write(peer,std::to_string(r.n)+" "+std::to_string(r.e));
+            Socket::write(peer,build_response(KEY,std::to_string(r.n)+" "+std::to_string(r.e)));
             break;
         }
+        
         case SEND_MSG: {
             std::cout<<args<<std::endl;
-            Socket::write(peer,OK_STR);
+            Socket::write(peer,build_response(MSG,OK_STR));
             break;
         }
+
         case STOP:{
-            Socket::write(peer,OK_STR);
+            Socket::write(peer,build_response(MSG,SHUTDOWN_STR));
             s->stop();
             break;
         }
+        
         case SEND_PROOF_OF_ID:{
             std::string proof = RSA_Container::encrypt(r.n,r.d,"SERVER");
-            Socket::write(peer,"Still working on this");
+            Socket::write(peer,build_response(ID,proof));
             break;
         }
+        
         default:
-            Socket::write(peer,BAD_CMD_STR);
+            Socket::write(peer,build_response(MSG,BAD_CMD_STR));
             break;
     }
 }

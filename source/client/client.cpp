@@ -47,12 +47,13 @@ int main(){
         std::cout<<"Bad keystring\n";
         throw std::exception();
     }
+    
     //By now we should have the keys
     //Every command is going to be encrypted from this point
-    while(true){
+    int control = true;
+    while(control){
         //First: get the command from stdin
         std::string cmd;
-        std::transform(cmd.begin(),cmd.end(),cmd.begin(),[](const char c){return std::toupper(c);});
         std::getline(std::cin,cmd);
         if(cmd.size() == 0){
             continue;
@@ -65,10 +66,31 @@ int main(){
         poll(&p,1,-1);
         std::string response = Socket::read(client.get_sock());
         //Parse the response (response codes defined in cmd.hpp)
-        std::cout<<response<<std::endl;
-        /*
-        int response_code;
-        std::vector<std::string> parsresponse = parse_response(response,response_code);
-        */
-    }   
+        std::pair<int,std::string> parsed_response = parse_response(response);
+        switch(parsed_response.first){
+            case BAD:{
+                std::cout<<"Bad command\n";
+                break;
+            }
+            case MSG:{
+                std::cout<<"Message received: "<<parsed_response.second<<std::endl;
+                if(parsed_response.second == SHUTDOWN_STR){
+                    control = false;
+                    break;
+                }
+                break;
+            }
+            case KEY:{
+                parse_keystring(parsed_response.second,n,e);
+                break;
+            }case ID:{
+                std::string proof = RSA_Container::decrypt(n,e,parsed_response.second);
+                std::cout<<"Proof: "<<proof<<std::endl;
+                break;
+            }
+            default:
+                std::cout<<"The unthinkable happened...\n";
+                break;
+        } 
+    }
 }    

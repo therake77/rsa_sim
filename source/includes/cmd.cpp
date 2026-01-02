@@ -81,6 +81,42 @@ bool parse_keystring(std::string keystring,uint64_t& mod, uint64_t& exp){
     return true;
 }
 
+std::string build_response(int __res_code, std::string args){
+    switch(__res_code){
+        case MSG:{
+            return std::string(MSG_STR)+":"+args;
+        }
+        case KEY:{
+            return std::string(KEY_STR)+":"+args;
+        }
+        case ID:{
+            return std::string(ID_STR)+":"+args;
+        }
+        default:
+            return std::string(MSG_STR)+":"+"Bad response";
+    }
+}
+
+std::pair<int,std::string> parse_response(std::string msg){
+    int i = msg.find(":");
+    if(i == std::string::npos){
+        return {BAD,""};
+    }
+    std::string _key = msg.substr(0,i);
+    std::string _args = msg.substr(i+1,msg.length()-i-1);
+    //now get the message
+    if(_key == MSG_STR){
+        return {MSG,_args};
+    }
+    if(_key == KEY_STR){
+        return {KEY,_args};
+    }
+    if(_key == ID_STR){
+        return {ID,_args};
+    }
+    return {BAD,""};
+}
+
 std::vector<std::string> toblocks(std::string msg,int blocksize){
     std::vector<std::string> result;
     for(int i = 0 ; i < msg.size(); i+=blocksize){
