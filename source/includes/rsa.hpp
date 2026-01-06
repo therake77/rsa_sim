@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <random>
+#include <types.hpp>
 
 const uint64_t bases[] = {2ULL,7ULL,61ULL};
 
@@ -13,8 +14,11 @@ uint64_t fast_mod_exp(uint64_t, uint64_t, uint64_t);
 bool isPrime(uint64_t n);
 uint64_t gcd(uint64_t a, uint64_t b);
 gcdinfo extended_euclidean_algorithm(uint64_t a, uint64_t b);
+uint64_t inverse_mod(uint64_t , uint64_t );
+uint64_t pollard_rho_fact(uint64_t ,uint64_t , uint64_t );
+uint64_t fact_n(uint64_t);
 
-class RSA_Container{
+class RSA_Container : Erasable{
 private:
     std::random_device rd;
     std::mt19937_64 gen;

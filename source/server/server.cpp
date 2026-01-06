@@ -63,7 +63,7 @@ int main(){
     Server server = Server(addr);
     RSA_Container r = RSA_Container();
 
-    server.attach_object<RSA_Container>("rsa_obj",std::make_shared<RSA_Container>(r));
+    server.attach_object<RSA_Container>("rsa_obj",std::make_unique<RSA_Container>(r));
     server.set_operation(&f);
     server.set_welcome_op(&welcome);
     server.wait_for_comms(5);

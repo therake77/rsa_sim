@@ -79,11 +79,6 @@ bool isPrime(uint64_t n){
 
 
 uint64_t gcd(uint64_t a, uint64_t b){
-    if(a < b){
-        uint64_t temp = a;
-        b = a;
-        a = temp;
-    }
     while(b != 0){
         uint64_t temp = b;
         b = a % b;
@@ -206,4 +201,47 @@ void RSA_Container::invalidateKeys(){
     this->hasValidKeys = false;
 }
 
+uint64_t pollard_rho_fact(uint64_t n,uint64_t x_0, uint64_t c){
+    auto f = [n,c](const uint64_t u){
+        return (uint64_t)((fast_mod_exp(u,2,n) + c) % n);
+    };
 
+    uint64_t d = 1ULL;
+    uint64_t x = x_0,y = x;
+    while(d == 1){
+        x = f(x);
+        y = f(f(y));
+        if(x > y){
+            d = gcd(x-y,n);
+        }else{
+            d = gcd(y-x,n);
+        }
+    }
+    if(d == n){
+        return 0;
+    }
+    return d;
+}
+
+uint64_t fact_n(uint64_t n){
+    if(n ==0 || n == 1) return 1;
+    bool control = true;
+    
+    std::uniform_int_distribution<uint32_t> x_0_space = std::uniform_int_distribution<uint32_t>(3,n-2);
+    std::uniform_int_distribution<uint32_t> c_space = std::uniform_int_distribution<uint32_t>(2,n-1);
+    std::random_device gen;
+    size_t iter_num = 0;
+    uint64_t x_0 = 2, c = 1;
+    uint64_t p;
+    while(control){
+        p = pollard_rho_fact(n,x_0,c);
+        iter_num++;
+        if(p != 0 || iter_num == (0x01<<16)){
+            control = false;
+        }
+        x_0 = x_0_space(gen);
+        c = c_space(gen);
+        
+    }
+    return p;
+}

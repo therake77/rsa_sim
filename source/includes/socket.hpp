@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <types.hpp>
 
 class Socket{
 private:
@@ -32,24 +33,26 @@ public:
 class Agent{
 protected:    
     Socket sock;
-    std::unordered_map<std::string,std::shared_ptr<void>>customObjects;
+    std::unordered_map<std::string,std::unique_ptr<Erasable>> customObjects;
 public:    
     Agent(std::string);
     int get_fd();
     const Socket& get_sock() const;
-    template<typename T>
     
-    std::shared_ptr<T> get_object(std::string key){
+    template<typename T>
+    T* get_object(std::string key){
         auto obj = this->customObjects.find(key);
         if(obj == this->customObjects.end()){
-            return {};
+            return nullptr;
         } 
         return std::static_pointer_cast<T>(obj->second);
     }
 
     template<typename T>
-    void attach_object(std::string obj_key, std::shared_ptr<T> obj_ptr){
-        this->customObjects.insert({obj_key,obj_ptr});
+    void attach_object(std::string obj_key, std::unique_ptr<T> obj_ptr){
+        static_assert(std::is_base_of_v<Erasable,T>);
+        std::unique_ptr<Erasable> base = std::move(obj_ptr);
+        this->customObjects.emplace(obj_key,std::move(base));
         return;
     }
 };

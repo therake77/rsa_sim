@@ -3,13 +3,22 @@
 #include <iostream>
 #include <list>
 #include <algorithm>
+#include <cctype>
 
 int main(){
-    std::string s;
-    std::getline(std::cin,s);
-    std::vector<std::string> blocks = toblocks(s,7);
-    for(std::string b: blocks){
-        std::cout<<b<<std::endl;
-        c_print(b);
+    uint64_t num;
+    std::cin>>num;
+    std::cout<<num<<std::endl;
+    uint64_t p = pollard_rho_fact(num,2,1);
+    if(p == 0){
+        std::cout<<"failed"<<std::endl;
     }
+    if(num % p != 0){
+        std::cout<<"invalid factor"<<std::endl;
+    }
+    uint64_t q = num/p;
+    std::cout<<p<<std::endl;
+    std::cout<<q<<std::endl;
+    std::cout<<((uint64_t)p*q == num ? "true" : "false" )<<std::endl;
+    return 0;
 }
