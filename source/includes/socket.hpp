@@ -6,7 +6,11 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+<<<<<<< HEAD
 #include <types.hpp>
+=======
+#include <any>
+>>>>>>> main
 
 class Socket{
 private:
@@ -22,9 +26,13 @@ public:
     static void write(const Socket&,std::string);
     int get_fd();
     bool operator==(const Socket&);
-    
+    //Copy operations are forbidden
     Socket(const Socket&) = delete;
     Socket& operator=(const Socket&) = delete;
+
+    //Move operations are admisible
+    Socket(Socket&&) noexcept;
+    Socket& operator=(Socket&&) noexcept;
 
     bool connect_to(std::string addr);
     bool sock_listen(int);
@@ -33,12 +41,18 @@ public:
 class Agent{
 protected:    
     Socket sock;
+<<<<<<< HEAD
     std::unordered_map<std::string,std::unique_ptr<Erasable>> customObjects;
 public:    
+=======
+    std::unordered_map<std::string,std::unique_ptr<std::any>>customObjects;
+public:
+>>>>>>> main
     Agent(std::string);
     int get_fd();
     const Socket& get_sock() const;
     
+<<<<<<< HEAD
     template<typename T>
     T* get_object(std::string key){
         auto obj = this->customObjects.find(key);
@@ -55,6 +69,18 @@ public:
         this->customObjects.emplace(obj_key,std::move(base));
         return;
     }
+=======
+    template<typename T>    
+    T& get_object(const std::string key){
+        auto obj = this->customObjects.find(key);
+        if(obj == this->customObjects.end()){
+            throw std::exception();
+        }
+        return std::any_cast<T&>(*(obj->second));
+    }
+
+    bool attach_object(std::string, std::unique_ptr<std::any>);
+>>>>>>> main
 };
 
 class Client : public Agent{

@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS = -std=c++17 -w -g -I$(INCLUDES)
+CFLAGS = -std=c++17 -w -Wall -g -I$(INCLUDES)
 SRC := source
 OBJECT := build/object
 BIN := build/bin

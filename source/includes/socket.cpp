@@ -21,9 +21,33 @@ Socket::Socket(int __fd, struct sockaddr_un _sock_addr) : addr(_sock_addr.sun_pa
     this->socket_addr = _sock_addr;
 }
 
+bool Socket::operator==(const Socket& s){
+    return this->socket_fd == s.socket_fd;
+} 
+
+/*Move operator and constructor*/
+Socket::Socket(Socket&& sock) noexcept : addr(sock.addr){
+    this->socket_fd = sock.socket_fd;
+    this->socket_addr = sock.socket_addr;
+    /*Remove ownership of first socket*/
+    sock.socket_fd = -1;
+}
+
+Socket& Socket::operator=(Socket&& sock) noexcept{
+    if(this != &sock){
+        this->socket_fd = sock.socket_fd;
+        this->socket_addr = sock.socket_addr;
+        /*Remove ownership of first socket*/
+        sock.socket_fd = -1;
+    }
+}
+
+
 /*Destructor that closes the file descriptor*/
 Socket::~Socket(){
-    close(this->socket_fd);
+    if(this->socket_fd >=0 ){
+        close(this->socket_fd);
+    }
 }
 
 bool Socket::start(){
@@ -37,6 +61,7 @@ bool Socket::start(){
     }
     return true;
 }
+
 /*Allows to read from an specified Socket in a safe way. 
 Expects the null character to work as delimiter between messages*/
 std::string Socket::read(const Socket& s){
@@ -135,9 +160,7 @@ int Socket::get_fd(){
     return this->socket_fd;
 }
 
-bool Socket::operator==(const Socket& s){
-    return this->socket_fd == s.socket_fd;
-}
+
 
 /*Allows connecting to another socket, with address addr*/
 bool Socket::connect_to(std::string addr){
@@ -205,6 +228,11 @@ int Agent::get_fd(){
 /*Returns a unique pointer encapsulating the socket object*/
 const Socket& Agent::get_sock() const{
     return this->sock;
+}
+
+bool Agent::attach_object(std::string obj_key, std::unique_ptr<std::any> obj_ptr){
+    auto [it, emplaced] = this->customObjects.emplace(obj_key,std::move(obj_ptr));
+    return emplaced;
 }
 
 /*-------------------------------------End of Agent definitions-------------------------------------*/
