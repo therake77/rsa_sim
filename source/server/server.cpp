@@ -6,13 +6,13 @@
 #include <cctype>
 
 void welcome(Server* s, const Socket& peer){
-    RSA_Container& r = *(s->get_object<RSA_Container>("rsa_obj"));
+    RSA_Container& r = s->get_object<RSA_Container>("rsa_obj");
     std::string keystring = std::to_string(r.n)+" "+std::to_string(r.e);
     Socket::write(peer,keystring);
 }
 
 void f(Server* s, const Socket& peer){
-    RSA_Container& r = *(s->get_object<RSA_Container>("rsa_obj"));
+    RSA_Container& r = (s->get_object<RSA_Container>("rsa_obj"));
     std::string encrypted_msg = Socket::read(peer);
     std::cout<<"Encrypted message: "<<encrypted_msg<<" Length: "<<encrypted_msg.length()<<std::endl;
     c_print(encrypted_msg);
@@ -62,8 +62,8 @@ int main(){
 
     Server server = Server(addr);
     RSA_Container r = RSA_Container();
-
-    server.attach_object<RSA_Container>("rsa_obj",std::make_shared<RSA_Container>(r));
+    std::any any_r = std::make_any<RSA_Container>(r);
+    server.attach_object("rsa_obj",std::unique_ptr<std::any>(&any_r));
     server.set_operation(&f);
     server.set_welcome_op(&welcome);
     server.wait_for_comms(5);

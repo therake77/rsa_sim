@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <any>
 
 class Socket{
 private:
@@ -21,9 +22,13 @@ public:
     static void write(const Socket&,std::string);
     int get_fd();
     bool operator==(const Socket&);
-    
+    //Copy operations are forbidden
     Socket(const Socket&) = delete;
     Socket& operator=(const Socket&) = delete;
+
+    //Move operations are admisible
+    Socket(Socket&&) noexcept;
+    Socket& operator=(Socket&&) noexcept;
 
     bool connect_to(std::string addr);
     bool sock_listen(int);
@@ -32,26 +37,22 @@ public:
 class Agent{
 protected:    
     Socket sock;
-    std::unordered_map<std::string,std::shared_ptr<void>>customObjects;
-public:    
+    std::unordered_map<std::string,std::unique_ptr<std::any>>customObjects;
+public:
     Agent(std::string);
     int get_fd();
     const Socket& get_sock() const;
-    template<typename T>
     
-    std::shared_ptr<T> get_object(std::string key){
+    template<typename T>    
+    T& get_object(const std::string key){
         auto obj = this->customObjects.find(key);
         if(obj == this->customObjects.end()){
-            return {};
-        } 
-        return std::static_pointer_cast<T>(obj->second);
+            throw std::exception();
+        }
+        return std::any_cast<T&>(*(obj->second));
     }
 
-    template<typename T>
-    void attach_object(std::string obj_key, std::shared_ptr<T> obj_ptr){
-        this->customObjects.insert({obj_key,obj_ptr});
-        return;
-    }
+    bool attach_object(std::string, std::unique_ptr<std::any>);
 };
 
 class Client : public Agent{
