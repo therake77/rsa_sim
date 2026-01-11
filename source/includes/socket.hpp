@@ -6,11 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
-<<<<<<< HEAD
-#include <types.hpp>
-=======
 #include <any>
->>>>>>> main
 
 class Socket{
 private:
@@ -24,7 +20,7 @@ public:
     ~Socket();
     static std::string read(const Socket&);
     static void write(const Socket&,std::string);
-    int get_fd();
+    int get_fd() const;
     bool operator==(const Socket&);
     //Copy operations are forbidden
     Socket(const Socket&) = delete;
@@ -36,40 +32,18 @@ public:
 
     bool connect_to(std::string addr);
     bool sock_listen(int);
+    std::string get_sock_addr() const;
 };
 
 class Agent{
 protected:    
     Socket sock;
-<<<<<<< HEAD
-    std::unordered_map<std::string,std::unique_ptr<Erasable>> customObjects;
-public:    
-=======
     std::unordered_map<std::string,std::unique_ptr<std::any>>customObjects;
 public:
->>>>>>> main
     Agent(std::string);
     int get_fd();
     const Socket& get_sock() const;
     
-<<<<<<< HEAD
-    template<typename T>
-    T* get_object(std::string key){
-        auto obj = this->customObjects.find(key);
-        if(obj == this->customObjects.end()){
-            return nullptr;
-        } 
-        return std::static_pointer_cast<T>(obj->second);
-    }
-
-    template<typename T>
-    void attach_object(std::string obj_key, std::unique_ptr<T> obj_ptr){
-        static_assert(std::is_base_of_v<Erasable,T>);
-        std::unique_ptr<Erasable> base = std::move(obj_ptr);
-        this->customObjects.emplace(obj_key,std::move(base));
-        return;
-    }
-=======
     template<typename T>    
     T& get_object(const std::string key){
         auto obj = this->customObjects.find(key);
@@ -80,7 +54,6 @@ public:
     }
 
     bool attach_object(std::string, std::unique_ptr<std::any>);
->>>>>>> main
 };
 
 class Client : public Agent{

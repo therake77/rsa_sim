@@ -156,7 +156,7 @@ void Socket::write(const Socket& s, std::string msg){
     return;
 }
 /*Returns the file dscriptor of a given socket*/
-int Socket::get_fd(){
+int Socket::get_fd() const{
     return this->socket_fd;
 }
 
@@ -214,6 +214,10 @@ bool Socket::sock_listen(int max_conn){
         return false;
     }
     return true;
+}
+
+std::string Socket::get_sock_addr() const{
+    return this->addr;
 }
 
 /*-------------------------------------End of Socket definitions-------------------------------------*/
@@ -327,7 +331,7 @@ void Server::up(){
         //Now, check for event in peers sockets
         for(auto p = to_watch.begin()+1; p!=to_watch.end();){
             if((*p).revents & (POLLERR | POLLHUP | POLLRDHUP)){//disconnection event
-                std::cout<<"Removing: "<<(*p).fd<<std::endl;
+                std::cout<<"Removing client with file descriptor: "<<(*p).fd<<std::endl;
                 this->remove_conn((*p).fd);
                 p = to_watch.erase(p);   
             }else if((*p).revents & (POLLIN)){
@@ -346,10 +350,9 @@ void Server::up(){
                 p++;
             }
         }
-
-        
-
     }
+    to_watch.clear();
+    this->conn_pool.clear();
 }
 
 void Server::stop(){

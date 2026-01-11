@@ -6,3 +6,7 @@ client
 CLIENT
 server
 SERVER
+attacker
+client2
+innocent_client
+true_server

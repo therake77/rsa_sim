@@ -148,9 +148,6 @@ RSA_Container::RSA_Container()
     keyspace = std::uniform_int_distribution<uint32_t>(0x80000000u,0xFFFFFFFFu);
     try{
         this->generateKeys();
-        std::cout<<"p: "<<this->p<<"q: "<<this->q<<"n: "<<this->n<<std::endl;
-        std::cout<<"e: "<<this->e<<std::endl;
-        std::cout<<"d: "<<this->d<<std::endl;
     }catch(std::exception e){
         std::cout<<"Error generating keys\n";
         throw e;
@@ -172,9 +169,7 @@ void RSA_Container::generateKeys(){
     this->p = generatePrime();
     this->q = generatePrime();
     this-> n = ((uint64_t)p*(uint64_t)q);
-    std::cout<<"p : "<<p<<" q: "<<q<<" n: "<<n<<std::endl;
     uint64_t totient = (uint64_t)(((uint64_t)p-1ULL) *((uint64_t)q-1ULL));
-    std::cout<<"generated totient: "<<totient<<std::endl;
     //generate e
     uint64_t temp;
     std::uniform_int_distribution<uint64_t> e_space(2,totient-1);
@@ -183,11 +178,9 @@ void RSA_Container::generateKeys(){
         temp = e_space(gen);
     }while(gcd(totient,temp) != 1ULL);
     this->e = temp;
-    std::cout<<"generated e: "<<temp<<std::endl;
 
     //generate d
     this->d = inverse_mod(e,totient);
-    std::cout<<"generated d: "<<this->d<<std::endl;
 
     if((uint64_t)(((__uint128_t)e*(__uint128_t)d)%(__uint128_t)totient)!=1ULL){
         throw std::exception();

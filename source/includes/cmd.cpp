@@ -32,7 +32,6 @@ std::string trim(std::string s){
 
 bool parse_cmd(std::string cmd,int& __cmd,std::string& payload){
     cmd = trim(cmd);
-    std::cout<<"command trimmed: "<<cmd<<std::endl;
     int i = cmd.find(' ');
     std::string _cmd = "";
     std::string _msg = "";
@@ -44,7 +43,6 @@ bool parse_cmd(std::string cmd,int& __cmd,std::string& payload){
     }
     std::transform(_cmd.begin(),_cmd.end(),_cmd.begin(),[](const char c){return std::toupper(c);});
     //now starts the comparisons
-    std::cout<<"command: "<<_cmd<<std::endl;
     if(_cmd == REQUEST_KEYS_STR){
         __cmd = REQUEST_KEYS;
         return true;

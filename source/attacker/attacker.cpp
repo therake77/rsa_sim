@@ -3,20 +3,19 @@
 #include <rsa.hpp>
 #include <cmd.hpp>
 #include <poll.h>
-#include <types.hpp>
 
 void welcome(Server* s, const Socket& peer){
-    uint64_t n = *s->get_object<uint64_t>("n");
-    uint64_t e = *s->get_object<uint64_t>("e");
+    uint64_t n = s->get_object<uint64_t>("n");
+    uint64_t e = s->get_object<uint64_t>("e");
     Socket::write(peer,std::to_string(n)+" "+std::to_string(e));
 }
 
 void operation(Server* s, const Socket& peer){
     //get our important constants:
-    uint64_t n = *s->get_object<uint64_t>("n");
-    uint64_t e = *s->get_object<uint64_t>("e");
-    uint64_t d = *s->get_object<uint64_t>("d");
-    Client& attacker = *s->get_object<Client>("conn_entity");
+    uint64_t n = s->get_object<uint64_t>("n");
+    uint64_t e = s->get_object<uint64_t>("e");
+    uint64_t d = s->get_object<uint64_t>("d");
+    Client& attacker = *(s->get_object<std::shared_ptr<Client>>("conn_entity"));
     //read the encripted message:
     std::string encrypted_msg = Socket::read(peer);
     //send it to the server
@@ -30,6 +29,7 @@ void operation(Server* s, const Socket& peer){
     pollfd stat = {attacker.get_fd(),POLLIN,0};
     poll(&stat,1,-1);
     std::string response = Socket::read(attacker.get_sock());
+    std::cout<<"Response received:"<<response<<std::endl;
     Socket::write(peer,response);
 }
 
@@ -63,20 +63,21 @@ int main(){
     //know obtain the rest of the keys
     q = n/p;
     d = inverse_mod(e,(p-1)*(q-1));
+    std::cout<<"Attack performed:\np: "<<p<<" q: "<<q<<" d: "<<d<<std::endl;
+    
 
 //From here, we have already the keys. Now our job is to "sustitute" the original server
-    false_server.attach_object<uint64_t>("n",std::make_unique<uint64_t>(Value(n)));
-    false_server.attach_object<uint64_t>("e",std::make_unique<uint64_t>(Value(e)));
-    false_server.attach_object<uint64_t>("d",std::make_unique<uint64_t>(Value(d)));
-    false_server.attach_object<Client>("conn_entity",std::make_unique<Client>(attacker));
-    false_server.wait_for_comms(5);
+    false_server.attach_object("n",std::make_unique<std::any>(n));
+    false_server.attach_object("e",std::make_unique<std::any>(e));
+    false_server.attach_object("d",std::make_unique<std::any>(d));
+    false_server.attach_object("conn_entity",std::make_unique<std::any>(
+            std::make_shared<Client>(std::move(attacker))
+        )
+    );
+
     false_server.set_welcome_op(&welcome);
     false_server.set_operation(&operation);
-
-
-    stat = {attacker.get_fd(),POLLOUT,0};
-    std::cout<<"Attack performed:\np: "<<p<<" q: "<<q<<" d: "<<d<<std::endl;
-    while(true){
-        
-    }
+    false_server.wait_for_comms(5);
+    
+    false_server.up();
 }

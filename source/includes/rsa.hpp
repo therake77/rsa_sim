@@ -1,6 +1,5 @@
 #include <cstdint>
 #include <random>
-#include <types.hpp>
 
 const uint64_t bases[] = {2ULL,7ULL,61ULL};
 
@@ -18,7 +17,7 @@ uint64_t inverse_mod(uint64_t , uint64_t );
 uint64_t pollard_rho_fact(uint64_t ,uint64_t , uint64_t );
 uint64_t fact_n(uint64_t);
 
-class RSA_Container : Erasable{
+class RSA_Container{
 private:
     std::random_device rd;
     std::mt19937_64 gen;

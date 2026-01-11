@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS = -std=c++17 -w -Wall -g -I$(INCLUDES)
+CFLAGS = -std=c++17 -w -g -I$(INCLUDES)
 SRC := source
 OBJECT := build/object
 BIN := build/bin
@@ -9,21 +9,18 @@ INCLUDES := source/includes
 
 all: server client attacker
 
-client: socket.o client.o rsa.o cmd.o types.o
-	$(CC) $(OBJECT)/socket.o $(OBJECT)/client.o $(OBJECT)/rsa.o $(OBJECT)/cmd.o $(OBJECT)/types.o -o $(BIN)/client
+client: socket.o client.o rsa.o cmd.o
+	$(CC) $(OBJECT)/socket.o $(OBJECT)/client.o $(OBJECT)/rsa.o $(OBJECT)/cmd.o -o $(BIN)/client
 
-server: socket.o server.o rsa.o cmd.o types.o
-	$(CC) $(OBJECT)/socket.o $(OBJECT)/server.o $(OBJECT)/rsa.o $(OBJECT)/cmd.o $(OBJECT)/types.o -o $(BIN)/server
+server: socket.o server.o rsa.o cmd.o
+	$(CC) $(OBJECT)/socket.o $(OBJECT)/server.o $(OBJECT)/rsa.o $(OBJECT)/cmd.o -o $(BIN)/server
 
-attacker: socket.o attacker.o rsa.o cmd.o types.o
-	$(CC) $(OBJECT)/socket.o $(OBJECT)/attacker.o $(OBJECT)/rsa.o $(OBJECT)/cmd.o $(OBJECT)/types.o -o $(BIN)/attacker
+attacker: socket.o attacker.o rsa.o cmd.o
+	$(CC) $(OBJECT)/socket.o $(OBJECT)/attacker.o $(OBJECT)/rsa.o $(OBJECT)/cmd.o -o $(BIN)/attacker
 
 
 tests: socket.o rsa.o test.o cmd.o
 	$(CC) $(OBJECT)/socket.o $(OBJECT)/rsa.o $(OBJECT)/test.o $(OBJECT)/cmd.o -o $(BIN)/test
-
-types.o: $(INCLUDES)/types.hpp $(INCLUDES)/types.cpp
-	$(CC) $(CFLAGS) -c $(INCLUDES)/types.cpp -o $(OBJECT)/types.o
 
 socket.o: $(INCLUDES)/socket.cpp $(INCLUDES)/socket.hpp 
 	$(CC) $(CFLAGS) -c $(INCLUDES)/socket.cpp -o $(OBJECT)/socket.o

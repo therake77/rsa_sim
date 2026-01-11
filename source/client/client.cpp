@@ -47,11 +47,12 @@ int main(){
         std::cout<<"Bad keystring\n";
         throw std::exception();
     }
-    
+    std::cout<<"Keys received: \n"<<"n: "<<n<<" e: "<<e<<std::endl;
     //By now we should have the keys
     //Every command is going to be encrypted from this point
     int control = true;
     while(control){
+        
         //First: get the command from stdin
         std::string cmd;
         std::getline(std::cin,cmd);
@@ -60,6 +61,7 @@ int main(){
         }
         std::string encrypted_msg = RSA_Container::encrypt(n,e,cmd);
         std::cout<<"Encrypted msg: "<<encrypted_msg<<std::endl;
+        std::cout<<"Encrypted message (ASCII): ";
         c_print(encrypted_msg);
         Socket::write(client.get_sock(),encrypted_msg);
         //The server will return a response
@@ -73,7 +75,7 @@ int main(){
                 break;
             }
             case MSG:{
-                std::cout<<"Message received: "<<parsed_response.second<<std::endl;
+                std::cout<<"Peer says: "<<parsed_response.second<<std::endl;
                 if(parsed_response.second == SHUTDOWN_STR){
                     control = false;
                     break;
@@ -85,12 +87,13 @@ int main(){
                 break;
             }case ID:{
                 std::string proof = RSA_Container::decrypt(n,e,parsed_response.second);
-                std::cout<<"Proof: "<<proof<<std::endl;
+                std::cout<<"Proof of identity is: "<<proof<<std::endl;
                 break;
             }
             default:
-                std::cout<<"The unthinkable happened...\n";
+                std::cout<<"Something bad has happened...\n";
                 break;
-        } 
+        }
+        
     }
 }    
